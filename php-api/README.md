@@ -1,64 +1,59 @@
 # Ardi-Agents PHP API
 
-🚀 **Lightweight Agentic Workflow System in PHP**
-
-A task-agnostic multi-agent orchestration framework for research, coding, UI/UX design, and more. This is the PHP implementation of the Ardi-Agents system, providing a clean API layer for frontend integration.
+A pure PHP implementation of the Ardi-Agents agentic workflow system. This is a standalone, isolated deployment option that mirrors the Python version functionality with zero external dependencies (only requires PHP + cURL).
 
 ## Features
 
-- ✅ **16 Specialized Agents** - Configurable agents for different tasks
-- ✅ **5 Workflow Templates** - Pre-defined workflows for common scenarios
-- ✅ **Custom Workflows** - Create dynamic agent sequences
-- ✅ **Session Management** - Track workflow state across requests
-- ✅ **Error Handling** - Built-in retry logic with exponential backoff
-- ✅ **Multi-Provider Support** - OpenAI and Anthropic integration
-- ✅ **Zero Dependencies** - Pure PHP with cURL for HTTP requests
-- ✅ **CORS Enabled** - Ready for frontend integration
+- **16 Specialized Agents** - Same agent configuration as Python version
+- **5 Workflow Templates** - Predefined sequences for different project phases
+- **Custom Workflows** - Dynamic agent sequences
+- **Session Management** - State tracking across requests
+- **Multi-Provider Support** - OpenAI, Anthropic, Google, OpenRouter, Groq, Together AI, HuggingFace
+- **Error Handling** - Exponential backoff retry logic
+- **CORS Enabled** - Ready for frontend integration
+- **Zero Dependencies** - Pure PHP with built-in cURL
 
-## Project Structure
+## Directory Structure
 
 ```
 php-api/
-├── api.php                 # Main API endpoint
-├── config/
-│   └── agents_config.json  # Agent and workflow configuration
-├── prompts/                # Agent prompt templates
-│   ├── analyst.txt
-│   ├── architect.txt
-│   ├── backend_dev.txt
-│   └── ... (16 total)
+├── api.php              # Main entry point
+├── agents_config.yaml   # Agent and workflow configuration
+├── test_api.php         # Test suite
 ├── src/
-│   ├── Config.php          # Configuration loader
-│   ├── PromptLoader.php    # Prompt template handler
-│   ├── Agent.php           # Individual agent executor
-│   ├── Orchestrator.php    # Workflow orchestration engine
-│   └── Api.php             # API business logic
-└── tests/
-    └── test_workflow.php   # Test suite
+│   ├── Config.php       # Configuration loader
+│   ├── PromptLoader.php # Prompt template loader
+│   ├── Agent.php        # Individual agent execution
+│   ├── Orchestrator.php # Workflow orchestration
+│   └── Api.php          # Business logic layer
+└── prompts/             # Agent prompt templates (16 .md files)
 ```
 
 ## Installation
 
 ### Requirements
 - PHP 8.0+
-- cURL extension enabled
-- OPENAI_API_KEY environment variable
+- cURL extension (usually enabled by default)
+- API keys for your chosen providers
 
 ### Setup
 
-1. Clone the repository:
+1. Clone or copy the `php-api` directory to your server
+2. Set environment variables for your API keys:
+
 ```bash
-git clone https://github.com/nexuss0781/Ardi-Agents.git
-cd Ardi-Agents/php-api
+export OPENAI_API_KEY='your-openai-key'
+export ANTHROPIC_API_KEY='your-anthropic-key'
+export GOOGLE_API_KEY='your-google-key'
+export GROQ_API_KEY='your-groq-key'
+export TOGETHER_API_KEY='your-together-key'
+export HUGGINGFACE_API_KEY='your-huggingface-key'
 ```
 
-2. Set environment variable:
-```bash
-export OPENAI_API_KEY='your-api-key-here'
-```
+3. Start the PHP built-in server:
 
-3. Run with PHP built-in server:
 ```bash
+cd php-api
 php -S localhost:8000 api.php
 ```
 
@@ -66,192 +61,160 @@ php -S localhost:8000 api.php
 
 ### Agents
 
-#### List All Agents
-```http
-GET /api/agents
+#### GET /api/agents
+List all available agents.
+
+```bash
+curl http://localhost:8000/api/agents
 ```
 
 Response:
 ```json
 {
   "success": true,
-  "data": [
+  "count": 16,
+  "agents": [
     {
-      "id": "analyst",
-      "name": "Requirements Analyst",
-      "role": "Analyze requirements and define scope",
-      "model": "gpt-4o",
-      "provider": "openai",
-      "temperature": 0.3
+      "id": "language_expert",
+      "description": "Polishes raw user queries...",
+      "model": "models/gemini-1.5-flash-latest",
+      "provider": "google",
+      "temperature": 0.1
     }
   ]
 }
 ```
 
-#### Get Specific Agent
-```http
-GET /api/agents/{id}
+#### GET /api/agents/{id}
+Get details for a specific agent.
+
+```bash
+curl http://localhost:8000/api/agents/analyst
 ```
 
-#### Execute Agent
-```http
-POST /api/agents
-Content-Type: application/json
+#### POST /api/agents
+Execute a single agent.
 
-{
-  "agent_id": "analyst",
-  "context": {
-    "user_request": "Build a todo app"
-  }
-}
+```bash
+curl -X POST http://localhost:8000/api/agents \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "language_expert",
+    "request": "build me a todo app with react"
+  }'
 ```
 
 ### Workflows
 
-#### List Workflow Templates
-```http
-GET /api/workflows
+#### GET /api/workflows
+List all workflow templates.
+
+```bash
+curl http://localhost:8000/api/workflows
 ```
 
-#### Run Workflow Template
-```http
-POST /api/workflows
-Content-Type: application/json
+#### POST /api/workflows
+Run a workflow (template, custom, or default).
 
-{
-  "workflow_name": "initial_engagement",
-  "initial_request": "Build a REST API for a blog platform",
-  "session_id": "optional-session-id"
-}
+**Using a template:**
+```bash
+curl -X POST http://localhost:8000/api/workflows \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_name": "initial_engagement",
+    "initial_request": "Build a todo application"
+  }'
 ```
 
-#### Run Custom Workflow
-```http
-POST /api/workflows
-Content-Type: application/json
-
-{
-  "agent_sequence": ["analyst", "architect", "backend_dev"],
-  "initial_request": "Create a microservice architecture",
-  "session_id": "optional-session-id"
-}
+**Using default workflow:**
+```bash
+curl -X POST http://localhost:8000/api/workflows \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow_name": "default",
+    "initial_request": "Create a weather dashboard"
+  }'
 ```
 
-#### Run Default Workflow
-```http
-POST /api/workflows
-Content-Type: application/json
-
-{
-  "initial_request": "Build a complete SaaS platform"
-}
+**Using custom workflow:**
+```bash
+curl -X POST http://localhost:8000/api/workflows \
+  -H "Content-Type: application/json" \
+  -d '{
+    "workflow": ["language_expert", "analyst", "frontend_developer"],
+    "initial_request": "Build a landing page"
+  }'
 ```
 
 ### Sessions
 
-#### List Sessions
-```http
-GET /api/sessions
+#### GET /api/sessions
+List all active sessions.
+
+```bash
+curl http://localhost:8000/api/sessions
 ```
 
-#### Get Session State
-```http
-GET /api/sessions/{session_id}
+#### GET /api/sessions/{id}
+Get state of a specific session.
+
+```bash
+curl http://localhost:8000/api/sessions/session_12345
 ```
 
-#### Clear Session
-```http
-DELETE /api/sessions/{session_id}
+#### DELETE /api/sessions/{id}
+Clear/delete a session.
+
+```bash
+curl -X DELETE http://localhost:8000/api/sessions/session_12345
 ```
 
 ## Available Agents
 
-| ID | Name | Role | Model | Temperature |
-|----|------|------|-------|-------------|
-| `analyst` | Requirements Analyst | Analyze requirements | gpt-4o | 0.3 |
-| `architect` | System Architect | Design architecture | gpt-4o | 0.4 |
-| `backend_dev` | Backend Developer | Implement backend | gpt-4o | 0.2 |
-| `frontend_dev` | Frontend Developer | Implement frontend | gpt-4o | 0.2 |
-| `ui_ux_designer` | UI/UX Designer | Design interfaces | gpt-4o | 0.5 |
-| `database_designer` | Database Designer | Design schemas | gpt-4o | 0.3 |
-| `security_expert` | Security Expert | Review security | gpt-4o | 0.2 |
-| `performance_expert` | Performance Expert | Optimize performance | gpt-4o | 0.3 |
-| `qa_engineer` | QA Engineer | Test and validate | gpt-4o | 0.2 |
-| `devops_engineer` | DevOps Engineer | Setup deployment | gpt-4o | 0.3 |
-| `technical_writer` | Technical Writer | Create documentation | gpt-4o | 0.4 |
-| `code_reviewer` | Code Reviewer | Review code quality | gpt-4o | 0.2 |
-| `integration_specialist` | Integration Specialist | Handle integrations | gpt-4o | 0.3 |
-| `data_scientist` | Data Scientist | Analyze data | gpt-4o | 0.4 |
-| `ml_engineer` | ML Engineer | Implement ML models | gpt-4o | 0.3 |
-| `project_manager` | Project Manager | Coordinate delivery | gpt-4o | 0.5 |
+| ID | Description | Model | Provider |
+|----|-------------|-------|----------|
+| language_expert | Polishes raw user queries | gemini-1.5-flash | Google |
+| user_engagement | Handles user interaction | gemini-1.5-flash | Google |
+| analyst | Market research & planning | phi-4-reasoning-plus | OpenRouter |
+| innovator | Creative brainstorming | qwerky-72b | OpenRouter |
+| frontend_developer | UI implementation | deepcoder-14b-preview | OpenRouter |
+| backend_developer | Server-side logic | DeepSeek-Coder-V2 | HuggingFace |
+| debugger | Bug identification | maestro-reasoning | Together AI |
+| task_decomposer | Task breakdown | phi-4-reasoning-plus | OpenRouter |
+| qa_council_planner | QA planning | gemini-1.5-flash-002 | Google |
+| code_quality_auditor | Code standards audit | Qwen2.5-Coder-32B | HuggingFace |
+| security_auditor | Security scanning | llama-prompt-guard-2 | Groq |
+| performance_auditor | Performance checks | phi-4-reasoning | OpenRouter |
+| ux_logic_auditor | UX verification | gemini-1.5-flash-002 | Google |
+| antagonistic_tester | Red team testing | qwq-32b-arliai-rpr | OpenRouter |
+| justifier | Impartial decider | Llama-3.1-405B | Together AI |
+| readme_generator | Documentation generation | phi-4-reasoning-plus | OpenRouter |
 
 ## Workflow Templates
 
-| Template | Steps | Purpose |
-|----------|-------|---------|
-| `initial_engagement` | 3 | Requirements analysis and planning |
-| `planning_phase` | 4 | Architecture and design |
-| `development_phase` | 4 | Implementation |
-| `qa_phase` | 4 | Testing and validation |
-| `completion_phase` | 3 | Documentation and deployment |
+### initial_engagement (2 steps)
+- language_expert
+- user_engagement
 
-## Usage Examples
+### planning_phase (3 steps)
+- analyst
+- innovator
+- qa_council_planner
 
-### JavaScript/Fetch Example
+### development_phase (3 steps)
+- task_decomposer
+- backend_developer
+- frontend_developer
 
-```javascript
-// List agents
-const response = await fetch('http://localhost:8000/api/agents');
-const data = await response.json();
-console.log(data.data);
+### qa_phase (5 steps)
+- code_quality_auditor
+- security_auditor
+- performance_auditor
+- ux_logic_auditor
+- antagonistic_tester
 
-// Execute single agent
-const result = await fetch('http://localhost:8000/api/agents', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    agent_id: 'analyst',
-    context: { user_request: 'Build a todo app' }
-  })
-});
-
-// Run workflow
-const workflow = await fetch('http://localhost:8000/api/workflows', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    workflow_name: 'initial_engagement',
-    initial_request: 'Build a REST API'
-  })
-});
-```
-
-### PHP Example
-
-```php
-<?php
-require_once 'src/Api.php';
-
-use ArdiAgents\Api;
-
-$api = new Api();
-
-// List agents
-$agents = $api->listAgents();
-
-// Execute agent
-$result = $api->executeAgent('analyst', [
-    'user_request' => 'Build a todo app'
-]);
-
-// Run workflow
-$workflow = $api->runWorkflow(
-    'initial_engagement',
-    'Build a REST API for a blog platform'
-);
-
-print_r($workflow);
-```
+### completion_phase (1 step)
+- readme_generator
 
 ## Testing
 
@@ -259,101 +222,115 @@ Run the test suite:
 
 ```bash
 cd php-api
-php tests/test_workflow.php
+php test_api.php
 ```
 
 Expected output:
 ```
 ============================================================
-ARDI AGENTS PHP - WORKFLOW TEST SUITE
+ARDI-AGENTS PHP API TEST SUITE
 ============================================================
 
-=== Testing Config Loading ===
-✓ PASS: Config loaded with 16 agents
-
-=== Testing Prompt Loader ===
-✓ PASS: Prompt loaded successfully
-
-=== Testing Agent Registry ===
-✓ PASS: All expected agents found (5/5)
-
-=== Testing List Agents API ===
-✓ PASS: Listed 16 agents via API
-
-=== Testing List Workflows API ===
-✓ PASS: Listed 5 workflow templates
-
-=== Testing Execute Agent: analyst ===
-✓ PASS: Agent executed successfully
-
-=== Testing Workflow Execution: initial_engagement ===
-✓ PASS: Workflow executed with status: completed
+Testing: Config Loading... ✓ PASSED
+Testing: Workflow Templates Loading... ✓ PASSED
+Testing: Prompt Loader - List Prompts... ✓ PASSED
+Testing: Prompt Loader - Load Individual Prompt... ✓ PASSED
+Testing: Prompt Loader - Render Prompt with Variables... ✓ PASSED
+Testing: Agent Registry Validation... ✓ PASSED
+Testing: Orchestrator - Session Management... ✓ PASSED
+Testing: API Routes Configuration... ✓ PASSED
+Testing: Default Workflow Validation... ✓ PASSED
 
 ============================================================
 TEST SUMMARY
 ============================================================
-✓ Passed: 7
+✓ Passed: 9
 ✗ Failed: 0
-Total: 7
+Total: 9
 ============================================================
-✅ ALL TESTS PASSED
+
+✅ ALL TESTS PASSED!
 ```
 
-## Error Handling
+## Frontend Integration Example
 
-The API includes robust error handling:
-
-- **Retry Logic**: Automatic retries with exponential backoff (up to 3 attempts)
-- **Error Responses**: Consistent error format with detailed messages
-- **Session Recovery**: Failed workflows preserve state for debugging
-
-Example error response:
-```json
-{
-  "success": false,
-  "error": "Agent not found: invalid_agent",
-  "retries": 0,
-  "timestamp": "2024-01-15T10:30:00+00:00"
+```javascript
+// Execute a workflow
+async function runWorkflow(workflowName, request) {
+  const response = await fetch('http://localhost:8000/api/workflows', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      workflow_name: workflowName,
+      initial_request: request
+    })
+  });
+  
+  const data = await response.json();
+  return data.result;
 }
+
+// Usage
+const result = await runWorkflow('initial_engagement', 'Build a todo app');
+console.log(result.final_output);
 ```
 
-## Deployment
+## Production Deployment
 
-### Apache/Nginx
+### Apache
 
-Configure your web server to route requests to `api.php`:
-
-**Apache (.htaccess)**:
+Add to your `.htaccess`:
 ```apache
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ api.php [QSA,L]
 ```
 
-**Nginx**:
+### Nginx
+
 ```nginx
-location / {
-    try_files $uri $uri/ /api.php?$query_string;
+location /api {
+    try_files $uri $uri/ /api/api.php?$query_string;
+    
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
 }
 ```
 
 ### Docker
 
 ```dockerfile
-FROM php:8.2-apache
-RUN docker-php-ext-install curl
-COPY . /var/www/html
-EXPOSE 80
+FROM php:8.2-cli
+
+WORKDIR /app
+COPY . /app
+
+EXPOSE 8000
+
+CMD ["php", "-S", "0.0.0.0:8000", "api.php"]
 ```
+
+## Comparison with Python Version
+
+| Feature | Python | PHP |
+|---------|--------|-----|
+| Dependencies | litellm, pyyaml | None (pure PHP) |
+| Runtime | Python 3.9+ | PHP 8.0+ |
+| Async Support | Yes | No (synchronous) |
+| Performance | Fast | Fast |
+| Deployment | pip install | Copy files |
+| API Compatibility | ✓ | ✓ (100% compatible) |
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License - Same as Python version
 
 ## Support
 
-For issues and feature requests, please open an issue on GitHub: https://github.com/nexuss0781/Ardi-Agents
-
----
-
-**Ardi-Agents PHP** - Smart, lightweight agentic workflow system for modern applications.
+For issues or questions, please open an issue on GitHub: https://github.com/nexuss0781/Ardi-Agents

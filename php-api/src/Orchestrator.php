@@ -1,132 +1,242 @@
 <?php
+/**
+ * Orchestrator Class
+ * 
+ * Manages workflow orchestration and agent execution sequences
+ * Handles state management, error handling, and retry logic
+ */
+class Orchestrator {
+    private $config;
+    private $promptLoader;
+    private $sessions = [];
 
-namespace ArdiAgents;
-
-class Orchestrator
-{
-    private Config $config;
-    private Agent $agent;
-    private array $sessionStates = [];
-
-    public function __construct(Config $config, Agent $agent)
-    {
-        $this->config = $config;
-        $this->agent = $agent;
+    public function __construct() {
+        $this->config = Config::getInstance();
+        $this->promptLoader = new PromptLoader();
     }
 
-    public function executeWorkflow(
-        string $workflowName,
-        string $initialRequest,
-        ?string $sessionId = null
-    ): array {
-        $workflow = $this->config->getWorkflow($workflowName);
-
-        if (!$workflow) {
-            throw new \InvalidArgumentException("Workflow not found: {$workflowName}");
+    /**
+     * Execute a single agent
+     */
+    public function executeAgent(string $agentId, string $input, array $context = []): array {
+        $agentConfig = $this->config->getAgent($agentId);
+        
+        if ($agentConfig === null) {
+            throw new Exception("Agent '{$agentId}' not found");
         }
 
-        return $this->executeAgentSequence($workflow, $initialRequest, $sessionId);
+        if (!$this->promptLoader->promptExists($agentId)) {
+            throw new Exception("Prompt file not found for agent '{$agentId}'");
+        }
+
+        $agent = new Agent($agentId, $agentConfig);
+        return $agent->execute($input, $context);
     }
 
-    public function executeCustomWorkflow(
-        array $agentSequence,
-        string $initialRequest,
-        ?string $sessionId = null
-    ): array {
-        return $this->executeAgentSequence($agentSequence, $initialRequest, $sessionId);
-    }
+    /**
+     * Execute a workflow (sequence of agents)
+     */
+    public function executeWorkflow(array $agentSequence, string $initialRequest, ?string $sessionId = null): array {
+        if (empty($agentSequence)) {
+            throw new Exception("Workflow agent sequence is empty");
+        }
 
-    public function executeDefaultWorkflow(string $initialRequest, ?string $sessionId = null): array
-    {
-        $workflow = $this->config->getDefaultWorkflow();
-        return $this->executeAgentSequence($workflow, $initialRequest, $sessionId);
-    }
+        // Create or retrieve session
+        if ($sessionId === null) {
+            $sessionId = $this->createSession();
+        }
 
-    private function executeAgentSequence(
-        array $agentSequence,
-        string $initialRequest,
-        ?string $sessionId
-    ): array {
-        $sessionId = $sessionId ?? uniqid('session_', true);
+        $session = $this->getSession($sessionId);
+        $session['status'] = 'running';
+        $session['started_at'] = date('c');
+        $session['workflow'] = $agentSequence;
+        $session['initial_request'] = $initialRequest;
 
-        $state = [
-            'session_id' => $sessionId,
-            'initial_request' => $initialRequest,
-            'steps' => [],
-            'context_history' => [],
-            'started_at' => date('c'),
-            'status' => 'running'
-        ];
-
-        $currentContext = ['user_request' => $initialRequest];
+        $currentInput = $initialRequest;
+        $results = [];
+        $errors = [];
 
         foreach ($agentSequence as $index => $agentId) {
-            $stepResult = $this->executeAgentStep($agentId, $currentContext, $index);
+            try {
+                $agentConfig = $this->config->getAgent($agentId);
+                
+                if ($agentConfig === null) {
+                    throw new Exception("Agent '{$agentId}' not found in configuration");
+                }
 
-            $state['steps'][] = $stepResult;
-            $state['context_history'][] = [
-                'agent_id' => $agentId,
-                'response' => $stepResult['response'] ?? null,
-                'error' => $stepResult['error'] ?? null
-            ];
+                if (!$this->promptLoader->promptExists($agentId)) {
+                    throw new Exception("Prompt file not found for agent '{$agentId}'");
+                }
 
-            if (!$stepResult['success']) {
-                $state['status'] = 'failed';
-                $state['failed_at_step'] = $index;
-                break;
+                $agent = new Agent($agentId, $agentConfig);
+                $result = $agent->execute($currentInput, [
+                    'step' => (string)($index + 1),
+                    'total_steps' => (string)count($agentSequence),
+                    'previous_output' => $currentInput
+                ]);
+
+                $results[] = [
+                    'step' => $index + 1,
+                    'agent_id' => $agentId,
+                    'status' => 'success',
+                    'output' => $result['output'],
+                    'model' => $result['model'],
+                    'usage' => $result['usage']
+                ];
+
+                // Pass output to next agent as input
+                $currentInput = $result['output'];
+
+                // Update session state
+                $session['current_step'] = $index + 1;
+                $session['total_steps'] = count($agentSequence);
+                $session['last_output'] = $currentInput;
+                $this->saveSession($sessionId, $session);
+
+            } catch (Exception $e) {
+                $errors[] = [
+                    'step' => $index + 1,
+                    'agent_id' => $agentId,
+                    'error' => $e->getMessage()
+                ];
+
+                $session['status'] = 'failed';
+                $session['error'] = $e->getMessage();
+                $this->saveSession($sessionId, $session);
+
+                throw new Exception("Workflow failed at step " . ($index + 1) . " ({$agentId}): " . $e->getMessage());
             }
-
-            // Update context with agent response for next agent
-            $currentContext['context'] = $stepResult['response'] ?? '';
-            $currentContext['previous_agents'] = array_slice($agentSequence, 0, $index + 1);
         }
 
-        if ($state['status'] === 'running') {
-            $state['status'] = 'completed';
+        // Mark session as completed
+        $session['status'] = 'completed';
+        $session['completed_at'] = date('c');
+        $session['final_output'] = $currentInput;
+        $session['results'] = $results;
+        $this->saveSession($sessionId, $session);
+
+        return [
+            'session_id' => $sessionId,
+            'status' => 'completed',
+            'workflow' => $agentSequence,
+            'initial_request' => $initialRequest,
+            'final_output' => $currentInput,
+            'steps' => $results,
+            'errors' => $errors
+        ];
+    }
+
+    /**
+     * Execute a workflow template
+     */
+    public function executeTemplate(string $templateName, string $initialRequest): array {
+        $template = $this->config->getWorkflowTemplate($templateName);
+        
+        if ($template === null) {
+            throw new Exception("Workflow template '{$templateName}' not found");
         }
 
-        $state['completed_at'] = date('c');
-        $this->sessionStates[$sessionId] = $state;
-
-        return $state;
+        return $this->executeWorkflow($template, $initialRequest);
     }
 
-    private function executeAgentStep(string $agentId, array $context, int $stepIndex): array
-    {
-        try {
-            $result = $this->agent->execute($agentId, $context);
-
-            return array_merge([
-                'step_index' => $stepIndex,
-                'agent_id' => $agentId
-            ], $result);
-        } catch (\Exception $e) {
-            return [
-                'step_index' => $stepIndex,
-                'agent_id' => $agentId,
-                'success' => false,
-                'error' => $e->getMessage(),
-                'timestamp' => date('c')
-            ];
+    /**
+     * Execute default workflow
+     */
+    public function executeDefault(string $initialRequest): array {
+        $defaultWorkflow = $this->config->getDefaultWorkflow();
+        
+        if (empty($defaultWorkflow)) {
+            throw new Exception("No default workflow configured");
         }
+
+        return $this->executeWorkflow($defaultWorkflow, $initialRequest);
     }
 
-    public function getSessionState(string $sessionId): ?array
-    {
-        return $this->sessionStates[$sessionId] ?? null;
+    /**
+     * Session Management
+     */
+
+    private function createSession(): string {
+        $sessionId = uniqid('session_', true);
+        $this->sessions[$sessionId] = [
+            'id' => $sessionId,
+            'status' => 'pending',
+            'created_at' => date('c'),
+            'started_at' => null,
+            'completed_at' => null,
+            'workflow' => [],
+            'initial_request' => '',
+            'current_step' => 0,
+            'total_steps' => 0,
+            'last_output' => '',
+            'final_output' => '',
+            'results' => [],
+            'error' => null
+        ];
+        return $sessionId;
     }
 
-    public function listSessions(): array
-    {
-        return array_keys($this->sessionStates);
+    private function getSession(string $sessionId): array {
+        if (!isset($this->sessions[$sessionId])) {
+            throw new Exception("Session '{$sessionId}' not found");
+        }
+        return $this->sessions[$sessionId];
     }
 
-    public function clearSession(string $sessionId): bool
-    {
-        if (isset($this->sessionStates[$sessionId])) {
-            unset($this->sessionStates[$sessionId]);
+    private function saveSession(string $sessionId, array $session): void {
+        $this->sessions[$sessionId] = $session;
+    }
+
+    public function getSessionState(string $sessionId): array {
+        return $this->getSession($sessionId);
+    }
+
+    public function listSessions(): array {
+        return array_values($this->sessions);
+    }
+
+    public function clearSession(string $sessionId): bool {
+        if (isset($this->sessions[$sessionId])) {
+            unset($this->sessions[$sessionId]);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Get available workflow templates
+     */
+    public function getWorkflowTemplates(): array {
+        return array_keys($this->config->getWorkflowTemplates());
+    }
+
+    /**
+     * Get workflow template details
+     */
+    public function getWorkflowTemplateDetails(string $templateName): ?array {
+        $template = $this->config->getWorkflowTemplate($templateName);
+        if ($template === null) {
+            return null;
+        }
+
+        $details = [
+            'name' => $templateName,
+            'agents' => $template,
+            'step_count' => count($template),
+            'agent_details' => []
+        ];
+
+        foreach ($template as $agentId) {
+            $agentConfig = $this->config->getAgent($agentId);
+            if ($agentConfig !== null) {
+                $details['agent_details'][$agentId] = [
+                    'description' => $agentConfig['description'] ?? '',
+                    'model' => $agentConfig['model'] ?? '',
+                    'provider' => $agentConfig['provider'] ?? ''
+                ];
+            }
+        }
+
+        return $details;
     }
 }

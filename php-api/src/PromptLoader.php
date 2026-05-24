@@ -1,60 +1,68 @@
 <?php
+/**
+ * PromptLoader Class
+ * 
+ * Loads and renders prompt templates from markdown files
+ */
+class PromptLoader {
+    private $promptsDir;
 
-namespace ArdiAgents;
-
-class PromptLoader
-{
-    private string $promptsPath;
-
-    public function __construct()
-    {
-        $this->promptsPath = __DIR__ . '/../prompts/';
+    public function __construct() {
+        $this->promptsDir = __DIR__ . '/../prompts';
     }
 
-    public function loadPrompt(string $promptFile): string
-    {
-        $filePath = $this->promptsPath . $promptFile;
-
+    /**
+     * Load a prompt template by agent name
+     */
+    public function loadPrompt(string $agentName): string {
+        $filePath = $this->promptsDir . '/' . $agentName . '.md';
+        
         if (!file_exists($filePath)) {
-            throw new \RuntimeException("Prompt file not found: {$filePath}");
+            throw new Exception("Prompt file not found: {$filePath}");
         }
 
-        $content = file_get_contents($filePath);
-        if ($content === false) {
-            throw new \RuntimeException("Failed to read prompt file: {$filePath}");
-        }
-
-        return trim($content);
+        return file_get_contents($filePath);
     }
 
-    public function renderPrompt(string $promptTemplate, array $variables): string
-    {
-        $rendered = $promptTemplate;
+    /**
+     * Render a prompt with variables
+     */
+    public function renderPrompt(string $agentName, array $variables = []): string {
+        $prompt = $this->loadPrompt($agentName);
 
+        // Replace {{variable}} placeholders
         foreach ($variables as $key => $value) {
-            $placeholder = '{{' . $key . '}}';
-            $rendered = str_replace($placeholder, (string)$value, $rendered);
+            $prompt = str_replace('{{' . $key . '}}', $value, $prompt);
         }
 
-        return $rendered;
+        return $prompt;
     }
 
-    public function getPromptForAgent(string $agentId, Config $config, array $context = []): string
-    {
-        $agent = $config->getAgent($agentId);
+    /**
+     * Check if a prompt exists
+     */
+    public function promptExists(string $agentName): bool {
+        $filePath = $this->promptsDir . '/' . $agentName . '.md';
+        return file_exists($filePath);
+    }
 
-        if (!$agent) {
-            throw new \InvalidArgumentException("Agent not found: {$agentId}");
+    /**
+     * List all available prompts
+     */
+    public function listPrompts(): array {
+        $prompts = [];
+        
+        if (!is_dir($this->promptsDir)) {
+            return $prompts;
         }
 
-        $promptFile = $agent['prompt_file'];
-        $template = $this->loadPrompt($promptFile);
+        $files = scandir($this->promptsDir);
+        foreach ($files as $file) {
+            if (pathinfo($file, PATHINFO_EXTENSION) === 'md') {
+                $prompts[] = pathinfo($file, PATHINFO_FILENAME);
+            }
+        }
 
-        $variables = [
-            'user_request' => $context['user_request'] ?? '',
-            'context' => $context['context'] ?? json_encode($context, JSON_PRETTY_PRINT)
-        ];
-
-        return $this->renderPrompt($template, $variables);
+        return $prompts;
     }
 }
