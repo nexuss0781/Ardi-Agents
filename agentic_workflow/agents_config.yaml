@@ -1,0 +1,160 @@
+# Master Agent Configuration
+# Each agent is defined with its prompt file, model, and metadata
+# The orchestrator will use this to dynamically build workflows
+
+agents:
+  language_expert:
+    prompt_file: "language_expert.md"
+    description: "Polishes raw user queries into clear, grammatically correct statements"
+    model: "models/gemini-1.5-flash-latest"
+    provider: "google"
+    temperature: 0.1
+
+  user_engagement:
+    prompt_file: "user_engagement.md"
+    description: "Handles user interaction, query clarification, and scope definition"
+    model: "models/gemini-1.5-flash-latest"
+    provider: "google"
+    temperature: 0.1
+
+  analyst:
+    prompt_file: "analyst.md"
+    description: "Handles market research, technical planning, and analysis"
+    model: "microsoft/phi-4-reasoning-plus:free"
+    provider: "openrouter"
+    temperature: 0.0
+
+  innovator:
+    prompt_file: "innovator.md"
+    description: "Handles creative brainstorming and feature expansion"
+    model: "featherless/qwerky-72b:free"
+    provider: "openrouter"
+    temperature: 0.7
+
+  frontend_developer:
+    prompt_file: "frontend_developer.md"
+    description: "Implements user interfaces and client-side logic"
+    model: "agentica-org/deepcoder-14b-preview:free"
+    provider: "openrouter"
+    temperature: 0.1
+
+  backend_developer:
+    prompt_file: "backend_developer.md"
+    description: "Implements server-side logic, APIs, and system architecture"
+    model: "deepseek-ai/DeepSeek-Coder-V2-Instruct"
+    provider: "huggingface"
+    temperature: 0.1
+
+  debugger:
+    prompt_file: "debugger.md"
+    description: "Identifies bugs and provides code corrections"
+    model: "arcee-ai/maestro-reasoning"
+    provider: "together_ai"
+    temperature: 0.0
+
+  task_decomposer:
+    prompt_file: "task_decomposer.md"
+    description: "Decomposes plans into actionable tasks"
+    model: "microsoft/phi-4-reasoning-plus:free"
+    provider: "openrouter"
+    temperature: 0.0
+    response_format: "json_object"
+
+  qa_council_planner:
+    prompt_file: "qa_council_planner.md"
+    description: "Plans quality assurance activities"
+    model: "models/gemini-1.5-flash-002"
+    provider: "google"
+    temperature: 0.1
+
+  code_quality_auditor:
+    prompt_file: "code_quality_auditor.md"
+    description: "Audits code for style, standards, and best practices"
+    model: "Qwen/Qwen2.5-Coder-32B-Instruct"
+    provider: "huggingface"
+    temperature: 0.0
+
+  security_auditor:
+    prompt_file: "security_auditor.md"
+    description: "Scans for security vulnerabilities"
+    model: "meta-llama/llama-prompt-guard-2-86m"
+    provider: "groq"
+    temperature: 0.0
+
+  performance_auditor:
+    prompt_file: "performance_auditor.md"
+    description: "Checks for performance bottlenecks"
+    model: "microsoft/phi-4-reasoning:free"
+    provider: "openrouter"
+    temperature: 0.0
+
+  ux_logic_auditor:
+    prompt_file: "ux_logic_auditor.md"
+    description: "Verifies UX and logic alignment with requirements"
+    model: "models/gemini-1.5-flash-002"
+    provider: "google"
+    temperature: 0.1
+
+  antagonistic_tester:
+    prompt_file: "antagonistic_tester.md"
+    description: "Red team testing to find edge cases and flaws"
+    model: "arliai/qwq-32b-arliai-rpr-v1:free"
+    provider: "openrouter"
+    temperature: 0.3
+
+  justifier:
+    prompt_file: "justifier.md"
+    description: "Impartial decider in disputes between agents"
+    model: "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo"
+    provider: "together_ai"
+    temperature: 0.0
+
+  readme_generator:
+    prompt_file: "readme_generator.md"
+    description: "Generates professional README documentation"
+    model: "microsoft/phi-4-reasoning-plus:free"
+    provider: "openrouter"
+    temperature: 0.1
+
+# Workflow templates - predefined sequences the orchestrator can use
+workflow_templates:
+  initial_engagement:
+    - language_expert
+    - user_engagement
+  
+  planning_phase:
+    - analyst
+    - innovator
+    - qa_council_planner
+  
+  development_phase:
+    - task_decomposer
+    - backend_developer
+    - frontend_developer
+  
+  qa_phase:
+    - code_quality_auditor
+    - security_auditor
+    - performance_auditor
+    - ux_logic_auditor
+    - antagonistic_tester
+  
+  completion_phase:
+    - readme_generator
+
+# Default full workflow sequence
+default_workflow:
+  - language_expert
+  - user_engagement
+  - analyst
+  - innovator
+  - qa_council_planner
+  - task_decomposer
+  - backend_developer
+  - frontend_developer
+  - code_quality_auditor
+  - security_auditor
+  - performance_auditor
+  - ux_logic_auditor
+  - antagonistic_tester
+  - readme_generator
