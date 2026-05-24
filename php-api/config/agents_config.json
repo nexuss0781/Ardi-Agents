@@ -1,0 +1,140 @@
+{
+  "agents": {
+    "analyst": {
+      "name": "Requirements Analyst",
+      "role": "Analyze requirements and define scope",
+      "prompt_file": "analyst.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.3
+    },
+    "architect": {
+      "name": "System Architect",
+      "role": "Design system architecture",
+      "prompt_file": "architect.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.4
+    },
+    "backend_dev": {
+      "name": "Backend Developer",
+      "role": "Implement backend logic",
+      "prompt_file": "backend_dev.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.2
+    },
+    "frontend_dev": {
+      "name": "Frontend Developer",
+      "role": "Implement frontend UI",
+      "prompt_file": "frontend_dev.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.2
+    },
+    "ui_ux_designer": {
+      "name": "UI/UX Designer",
+      "role": "Design user interfaces",
+      "prompt_file": "ui_ux_designer.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.5
+    },
+    "database_designer": {
+      "name": "Database Designer",
+      "role": "Design database schema",
+      "prompt_file": "database_designer.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.3
+    },
+    "security_expert": {
+      "name": "Security Expert",
+      "role": "Review security implications",
+      "prompt_file": "security_expert.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.2
+    },
+    "performance_expert": {
+      "name": "Performance Expert",
+      "role": "Optimize performance",
+      "prompt_file": "performance_expert.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.3
+    },
+    "qa_engineer": {
+      "name": "QA Engineer",
+      "role": "Test and validate",
+      "prompt_file": "qa_engineer.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.2
+    },
+    "devops_engineer": {
+      "name": "DevOps Engineer",
+      "role": "Setup deployment pipeline",
+      "prompt_file": "devops_engineer.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.3
+    },
+    "technical_writer": {
+      "name": "Technical Writer",
+      "role": "Create documentation",
+      "prompt_file": "technical_writer.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.4
+    },
+    "code_reviewer": {
+      "name": "Code Reviewer",
+      "role": "Review code quality",
+      "prompt_file": "code_reviewer.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.2
+    },
+    "integration_specialist": {
+      "name": "Integration Specialist",
+      "role": "Handle API integrations",
+      "prompt_file": "integration_specialist.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.3
+    },
+    "data_scientist": {
+      "name": "Data Scientist",
+      "role": "Analyze data requirements",
+      "prompt_file": "data_scientist.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.4
+    },
+    "ml_engineer": {
+      "name": "ML Engineer",
+      "role": "Implement ML models",
+      "prompt_file": "ml_engineer.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.3
+    },
+    "project_manager": {
+      "name": "Project Manager",
+      "role": "Coordinate project delivery",
+      "prompt_file": "project_manager.txt",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "temperature": 0.5
+    }
+  },
+  "workflows": {
+    "initial_engagement": ["analyst", "architect", "project_manager"],
+    "planning_phase": ["architect", "database_designer", "ui_ux_designer", "security_expert"],
+    "development_phase": ["backend_dev", "frontend_dev", "integration_specialist", "database_designer"],
+    "qa_phase": ["qa_engineer", "code_reviewer", "security_expert", "performance_expert"],
+    "completion_phase": ["technical_writer", "devops_engineer", "project_manager"]
+  },
+  "default_workflow": ["analyst", "architect", "database_designer", "ui_ux_designer", "backend_dev", "frontend_dev", "integration_specialist", "qa_engineer", "code_reviewer", "security_expert", "performance_expert", "technical_writer", "devops_engineer", "project_manager"]
+}

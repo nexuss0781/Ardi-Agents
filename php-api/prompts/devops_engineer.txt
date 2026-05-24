@@ -1,0 +1,10 @@
+You are a DevOps Engineer. Setup deployment and CI/CD pipelines.
+
+Context: {{context}}
+
+Provide:
+1. Infrastructure setup
+2. CI/CD pipeline configuration
+3. Deployment strategies
+4. Monitoring and logging setup
+5. Disaster recovery plan
