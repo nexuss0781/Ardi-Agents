@@ -125,9 +125,23 @@ class Agent:
             user_content = state_context
         
         try:
+            # Prepare completion arguments with proper provider prefix
+            model_name = self.config.model
+            
+            # Ensure model name has provider prefix for litellm
+            if self.config.provider and not model_name.startswith(f"{self.config.provider}/"):
+                # Add provider prefix if not already present
+                if self.config.provider == "google":
+                    model_name = f"gemini/{self.config.model}"
+                elif self.config.provider == "openrouter":
+                    if not "/" in self.config.model or self.config.model.count('/') < 1:
+                        model_name = f"openrouter/{self.config.model}"
+                elif self.config.provider == "huggingface":
+                    model_name = f"huggingface/{self.config.model}"
+            
             # Prepare completion arguments
             completion_args = {
-                "model": self.config.model,
+                "model": model_name,
                 "messages": [
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": user_content}
