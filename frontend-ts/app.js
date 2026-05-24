@@ -567,6 +567,53 @@ function saveSettings() {
 }
 
 // ==================== Initialization ====================
+// Tool state management
+let currentTool = 'file-manager';
+let currentMethod = null;
+
+// Tool configurations with icons and colors
+const toolsConfig = {
+    'file-manager': {
+        name: 'File Manager',
+        icon: 'folder-open',
+        color: 'text-blue-400',
+        methods: [
+            { name: 'List Files', id: 'list_files', icon: 'file-text' },
+            { name: 'Read File', id: 'read_file', icon: 'file-search' },
+            { name: 'Write File', id: 'write_file', icon: 'save' },
+            { name: 'Delete File', id: 'delete_file', icon: 'trash-2' },
+            { name: 'Move File', id: 'move_file', icon: 'move' },
+            { name: 'Copy File', id: 'copy_file', icon: 'copy' },
+            { name: 'Create Folder', id: 'create_folder', icon: 'folder-plus' },
+            { name: 'Rename File', id: 'rename_file', icon: 'edit-3' }
+        ]
+    },
+    'web-search': {
+        name: 'Web Search',
+        icon: 'globe',
+        color: 'text-emerald-400',
+        methods: [
+            { name: 'Search Web', id: 'search_web', icon: 'search' },
+            { name: 'Fetch URL', id: 'fetch_url', icon: 'link' },
+            { name: 'Get News', id: 'get_news', icon: 'newspaper' },
+            { name: 'Get Weather', id: 'get_weather', icon: 'sun' }
+        ]
+    },
+    'text-processor': {
+        name: 'Text Processor',
+        icon: 'type',
+        color: 'text-amber-400',
+        methods: [
+            { name: 'Format Text', id: 'format_text', icon: 'align-left' },
+            { name: 'Convert Case', id: 'convert_case', icon: 'case-sensitive' },
+            { name: 'Extract Emails', id: 'extract_emails', icon: 'mail' },
+            { name: 'Extract URLs', id: 'extract_urls', icon: 'link' },
+            { name: 'Word Count', id: 'word_count', icon: 'hash' },
+            { name: 'Remove Duplicates', id: 'remove_duplicates', icon: 'x' }
+        ]
+    }
+};
+
 async function init() {
     // Load settings from localStorage
     const savedSettings = localStorage.getItem('ardi-settings');
@@ -576,6 +623,9 @@ async function init() {
     
     // Initialize icons
     UI.initIcons();
+    
+    // Setup tool tab event listeners
+    setupToolTabs();
     
     // Setup event listeners
     document.getElementById('chatForm').addEventListener('submit', (e) => Handlers.handleSubmit(e));
@@ -587,6 +637,10 @@ async function init() {
         UI.addLogEntry('Goal cleared', 'info');
     });
     document.getElementById('clearLogBtn').addEventListener('click', () => UI.clearLog());
+    document.getElementById('clearChatBtn').addEventListener('click', () => {
+        document.getElementById('messagesContainer').innerHTML = '';
+        UI.addMessage('assistant', 'Chat cleared. Ready for new conversation.');
+    });
     
     // Quick action buttons
     document.querySelectorAll('.quick-action').forEach((btn, index) => {
@@ -639,6 +693,58 @@ async function init() {
     }
     
     console.log('Ardi-Agents Frontend initialized');
+}
+
+// Setup tool tabs functionality
+function setupToolTabs() {
+    const toolTabButtons = document.querySelectorAll('.tool-tab > button');
+    const methodItems = document.querySelectorAll('.method-item');
+    
+    // Tool tab click handlers
+    toolTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const toolTab = button.closest('.tool-tab');
+            const toolName = toolTab.dataset.tool;
+            const methodsList = toolTab.querySelector('.methods-list');
+            
+            // Update active states
+            toolTabButtons.forEach(btn => {
+                btn.parentElement.classList.remove('active-tab');
+                btn.parentElement.querySelector('.methods-list')?.classList.add('hidden');
+            });
+            
+            toolTab.classList.add('active-tab');
+            methodsList?.classList.remove('hidden');
+            
+            // Update current tool
+            currentTool = toolName;
+            currentMethod = null;
+            
+            // Add system message
+            const tool = toolsConfig[toolName];
+            UI.addMessage('system', `Switched to ${tool.name}. Select an action to begin.`);
+            
+            // Re-initialize icons
+            lucide.createIcons();
+        });
+    });
+    
+    // Method item click handlers
+    methodItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const methodName = item.querySelector('span').textContent;
+            const methodId = item.dataset.method;
+            
+            // Highlight selected method
+            methodItems.forEach(i => i.classList.remove('bg-slate-700/50'));
+            item.classList.add('bg-slate-700/50');
+            
+            currentMethod = methodId;
+            
+            // Add system message
+            UI.addMessage('system', `Selected action: ${methodName}`);
+        });
+    });
 }
 
 // Start the application

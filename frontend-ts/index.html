@@ -243,7 +243,7 @@
     <!-- Main Content -->
     <main class="flex-1 flex overflow-hidden">
         <!-- Sidebar -->
-        <aside class="w-64 glass border-r border-slate-800 hidden lg:flex flex-col">
+        <aside class="w-72 glass border-r border-slate-800 hidden lg:flex flex-col">
             <div class="p-4 border-b border-slate-800">
                 <button id="newChatBtn" class="w-full flex items-center justify-center space-x-2 px-4 py-2.5 bg-accent-600 hover:bg-accent-700 text-white rounded-lg font-medium transition-all duration-200 shadow-lg shadow-accent-900/20">
                     <i data-lucide="plus" class="w-4 h-4"></i>
@@ -251,9 +251,117 @@
                 </button>
             </div>
             
-            <!-- Recent Sessions -->
+            <!-- Tools Section -->
             <div class="flex-1 overflow-y-auto p-3">
-                <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">Recent Sessions</h3>
+                <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">Tools</h3>
+                
+                <!-- File Manager Tab -->
+                <div class="tool-tab mb-2" data-tool="file-manager">
+                    <button class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-700/50 active-tab transition-all group">
+                        <i data-lucide="folder-open" class="w-5 h-5 text-blue-400 group-hover:text-blue-300"></i>
+                        <span class="font-medium text-sm">File Manager</span>
+                    </button>
+                    
+                    <div class="methods-list ml-8 mt-1.5 space-y-1 max-h-48 overflow-y-auto hidden">
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="list_files">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>List Files</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="read_file">
+                            <i data-lucide="file-search" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Read File</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="write_file">
+                            <i data-lucide="save" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Write File</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="delete_file">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Delete File</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="move_file">
+                            <i data-lucide="move" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Move File</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="copy_file">
+                            <i data-lucide="copy" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Copy File</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="create_folder">
+                            <i data-lucide="folder-plus" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Create Folder</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="rename_file">
+                            <i data-lucide="edit-3" class="w-3.5 h-3.5 text-blue-300"></i>
+                            <span>Rename File</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Web Search Tab -->
+                <div class="tool-tab mb-2" data-tool="web-search">
+                    <button class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-700/50 transition-all group">
+                        <i data-lucide="globe" class="w-5 h-5 text-emerald-400 group-hover:text-emerald-300"></i>
+                        <span class="font-medium text-sm">Web Search</span>
+                    </button>
+                    
+                    <div class="methods-list ml-8 mt-1.5 space-y-1 max-h-48 overflow-y-auto hidden">
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="search_web">
+                            <i data-lucide="search" class="w-3.5 h-3.5 text-emerald-300"></i>
+                            <span>Search Web</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="fetch_url">
+                            <i data-lucide="link" class="w-3.5 h-3.5 text-emerald-300"></i>
+                            <span>Fetch URL</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="get_news">
+                            <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-300"></i>
+                            <span>Get News</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="get_weather">
+                            <i data-lucide="sun" class="w-3.5 h-3.5 text-emerald-300"></i>
+                            <span>Get Weather</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Text Processor Tab -->
+                <div class="tool-tab mb-2" data-tool="text-processor">
+                    <button class="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-700/50 transition-all group">
+                        <i data-lucide="type" class="w-5 h-5 text-amber-400 group-hover:text-amber-300"></i>
+                        <span class="font-medium text-sm">Text Processor</span>
+                    </button>
+                    
+                    <div class="methods-list ml-8 mt-1.5 space-y-1 max-h-48 overflow-y-auto hidden">
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="format_text">
+                            <i data-lucide="align-left" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>Format Text</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="convert_case">
+                            <i data-lucide="case-sensitive" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>Convert Case</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="extract_emails">
+                            <i data-lucide="mail" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>Extract Emails</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="extract_urls">
+                            <i data-lucide="link" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>Extract URLs</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="word_count">
+                            <i data-lucide="hash" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>Word Count</span>
+                        </div>
+                        <div class="method-item p-2 rounded cursor-pointer flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-700/30" data-method="remove_duplicates">
+                            <i data-lucide="x" class="w-3.5 h-3.5 text-amber-300"></i>
+                            <span>Remove Duplicates</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Sessions -->
+                <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-4 mb-3 px-2">Recent Sessions</h3>
                 <div id="sessionsList" class="space-y-1">
                     <!-- Sessions will be populated dynamically -->
                 </div>
@@ -261,7 +369,7 @@
             
             <!-- Quick Stats -->
             <div class="p-4 border-t border-slate-800">
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-3 mb-3">
                     <div class="text-center p-3 rounded-lg bg-slate-800/50">
                         <div id="totalAgents" class="text-xl font-bold text-accent-400">16</div>
                         <div class="text-xs text-slate-500">Agents</div>
@@ -271,6 +379,10 @@
                         <div class="text-xs text-slate-500">Active</div>
                     </div>
                 </div>
+                <button id="clearChatBtn" class="w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all text-sm">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Clear Chat</span>
+                </button>
             </div>
         </aside>
         
